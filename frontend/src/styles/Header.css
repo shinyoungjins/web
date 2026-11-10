@@ -1,0 +1,47 @@
+
+/* Header 전체 */
+header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 10px 20px;
+    background-color: #f8fafc;
+}
+
+/* 홈 이동 링크 */
+.header-home-link {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 80%;
+    max-width: 320px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* DG 로고 */
+.header-logo {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+
+/* 마우스를 올렸을 때 */
+.header-home-link:hover .header-logo {
+    transform: scale(1.05);
+}
+
+/* 모바일 화면 */
+@media (max-width: 768px) {
+    header {
+        padding: 10px 15px;
+    }
+
+    .header-home-link {
+        width: 70%;
+        max-width: 260px;
+    }
+}

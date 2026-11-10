@@ -1,0 +1,93 @@
+
+/* Footer 전체 */
+.footer {
+    width: 100%;
+    background-color: #20252b;
+    color: #cbd0d8;
+    padding: 16px 24px 12px;
+}
+
+/* 내부 컨테이너 */
+.footer-container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 회사명 + 사업자 정보 */
+.footer-content {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+/* 회사명 */
+.footer-brand {
+    flex-shrink: 0;
+}
+
+.footer-brand h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.footer-brand p {
+    margin: 0;
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+/* 사업자 정보 */
+.footer-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* 사업자 정보 한 줄 */
+.footer-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* 저작권 */
+.footer-bottom {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #3b424b;
+    font-size: 10px;
+    color: #8993a1;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .footer {
+        padding: 16px;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .footer-brand h2 {
+        font-size: 18px;
+    }
+
+    .footer-line {
+        gap: 6px 14px;
+        font-size: 11px;
+    }
+
+    .footer-bottom {
+        margin-top: 12px;
+        font-size: 10px;
+    }
+}
