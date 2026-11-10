@@ -1,0 +1,21 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Java / Maven
+**/target/
+*.class
+
+# React
+**/node_modules/
+**/dist/
+**/.env
+**/.env.*
+!**/.env.example
+
+# Local settings
+**/application-local.properties
+
+# OS
+.DS_Store
+Thumbs.db
