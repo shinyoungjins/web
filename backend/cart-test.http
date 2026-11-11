@@ -1,0 +1,26 @@
+
+### 장바구니 상품 추가
+POST http://localhost:8080/api/cart
+Content-Type: application/json
+
+{
+  "productId": 9,
+  "weightGram": 5000,
+  "quantity": 2
+}
+
+### 장바구니 상품 목록 조회
+GET http://localhost:8080/api/cart
+Accept: application/json
+
+
+### 장바구니 상품 수량 변경
+PATCH http://localhost:8080/api/cart/1
+Content-Type: application/json
+
+{
+  "quantity": 3
+}
+
+### 장바구니 상품 삭제
+DELETE http://localhost:8080/api/cart/1

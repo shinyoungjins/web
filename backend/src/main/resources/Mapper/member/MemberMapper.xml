@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.portfolio.portfolio.Mapper.MemberMapper">
+<mapper namespace="com.portfolio.portfolio.Mapper.member.MemberMapper">
 
-    <select id="selectMemberList" resultType="com.portfolio.portfolio.Vo.MemberVO">
+    <select id="selectMemberList" resultType="com.portfolio.portfolio.Vo.member.MemberVO">
         SELECT
         id,
         name,

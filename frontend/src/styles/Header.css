@@ -1,47 +1,217 @@
 
-/* Header 전체 */
-header {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* 전체 헤더 */
+.site-header {
     width: 100%;
-    padding: 10px 20px;
-    background-color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+    position: relative;
+    z-index: 100;
 }
 
-/* 홈 이동 링크 */
-.header-home-link {
+/* 로그인 / 회원가입 / 장바구니 */
+.header-user-menu {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
-    width: 80%;
-    max-width: 320px;
+    gap: 20px;
+    padding: 12px 5%;
+}
+
+.header-user-menu a {
+    font-size: 12px;
+    color: #666;
     text-decoration: none;
-    cursor: pointer;
 }
 
-/* DG 로고 */
+.header-user-menu a:hover {
+    color: #111;
+}
+
+/* 중앙 로고 */
 .header-logo {
-    display: block;
-    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0 20px;
+}
+
+.header-logo a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-logo img {
+    width: 150px;
     height: auto;
     object-fit: contain;
-    transition: transform 0.2s ease;
 }
 
-/* 마우스를 올렸을 때 */
-.header-home-link:hover .header-logo {
-    transform: scale(1.05);
+/* 상단 카테고리 메뉴 */
+.header-nav {
+    width: 100%;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #ddd;
+    background-color: #fff;
 }
 
-/* 모바일 화면 */
-@media (max-width: 768px) {
-    header {
+.header-menu-list {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 60px;
+    margin: 0;
+    padding: 0 20px;
+    list-style: none;
+}
+
+/* 개별 상위 메뉴 */
+.header-menu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.header-menu-item > a {
+    display: block;
+    padding: 18px 8px;
+    color: #222;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.header-menu-item:hover > a {
+    color: #a52a2a;
+}
+
+/* 하위 메뉴 드롭다운 */
+.header-submenu {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+
+    min-width: 150px;
+    margin: 0;
+    padding: 8px 0;
+    list-style: none;
+
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+
+    transition:
+            opacity 0.2s ease,
+            transform 0.2s ease,
+            visibility 0.2s ease;
+
+    z-index: 200;
+}
+
+/* 마우스 호버 또는 키보드 포커스 */
+.header-menu-item:hover .header-submenu,
+.header-menu-item:focus-within .header-submenu {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 하위 메뉴 항목 */
+.header-submenu li {
+    width: 100%;
+}
+
+.header-submenu li a {
+    display: block;
+    padding: 12px 20px;
+    color: #444;
+    font-size: 14px;
+    font-weight: 400;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+            background-color 0.2s ease,
+            color 0.2s ease;
+}
+
+.header-submenu li a:hover,
+.header-submenu li a:focus-visible {
+    background-color: #f8f4f2;
+    color: #a52a2a;
+}
+
+/* 태블릿 */
+@media (max-width: 1024px) {
+    .header-menu-list {
+        gap: 30px;
+    }
+
+    .header-logo img {
+        width: 130px;
+    }
+}
+
+/* 모바일 */
+@media (max-width: 600px) {
+    .header-user-menu {
+        gap: 12px;
         padding: 10px 15px;
     }
 
-    .header-home-link {
-        width: 70%;
-        max-width: 260px;
+    .header-user-menu a {
+        font-size: 11px;
+    }
+
+    .header-logo {
+        padding: 5px 0 15px;
+    }
+
+    .header-logo img {
+        width: 110px;
+    }
+
+    .header-nav {
+        overflow: visible;
+    }
+
+    .header-menu-list {
+        justify-content: flex-start;
+        gap: 15px;
+        padding: 0 15px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+
+    .header-menu-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .header-menu-item {
+        flex-shrink: 0;
+    }
+
+    .header-menu-item > a {
+        padding: 14px 4px;
+        font-size: 13px;
+    }
+
+    .header-submenu {
+        min-width: 130px;
+    }
+
+    .header-submenu li a {
+        padding: 10px 12px;
+        font-size: 12px;
     }
 }

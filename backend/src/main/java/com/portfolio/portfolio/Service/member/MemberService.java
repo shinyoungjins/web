@@ -1,8 +1,8 @@
 
-package com.portfolio.portfolio.Service;
+package com.portfolio.portfolio.Service.member;
 
-import com.portfolio.portfolio.Vo.MemberVO;
-import com.portfolio.portfolio.Mapper.MemberMapper;
+import com.portfolio.portfolio.Vo.member.MemberVO;
+import com.portfolio.portfolio.Mapper.member.MemberMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

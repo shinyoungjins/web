@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.portfolio.portfolio.Mapper.order.CartMapper">
+
+    <!-- 장바구니 조회 결과 매핑 -->
+    <resultMap id="cartResultMap" type="com.portfolio.portfolio.Vo.order.CartVO">
+        <id property="cartId" column="cart_id"/>
+        <result property="memberId" column="member_id"/>
+        <result property="guestId" column="guest_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="weightGram" column="weight_gram"/>
+        <result property="quantity" column="quantity"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="productName" column="product_name"/>
+        <result property="productImage" column="product_image"/>
+        <result property="originCd" column="origin_cd"/>
+        <result property="pricePerKg" column="price_per_kg"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="totalPrice" column="total_price"/>
+    </resultMap>
+
+    <!-- 장바구니 상품 목록 조회 -->
+    <select id="selectCartList" resultMap="cartResultMap">
+        SELECT
+        c.cart_id,
+        c.member_id,
+        c.guest_id,
+        c.product_id,
+        c.weight_gram,
+        c.quantity,
+        c.created_at,
+        c.updated_at,
+        p.product_name,
+        p.product_image,
+        p.origin_cd,
+        pp.price_per_kg,
+        (pp.price_per_kg::BIGINT * c.weight_gram / 1000) AS unit_price,
+        (pp.price_per_kg::BIGINT * c.weight_gram / 1000 * c.quantity) AS total_price
+        FROM cart c
+        INNER JOIN product p
+        ON c.product_id = p.product_id
+        LEFT JOIN LATERAL (
+        SELECT price_per_kg
+        FROM product_price
+        WHERE product_id = c.product_id
+        AND use_yn = 'Y'
+        AND base_date <![CDATA[<=]]> #{baseDate}
+        ORDER BY base_date DESC, price_id DESC
+        LIMIT 1
+        ) pp ON TRUE
+        WHERE p.use_yn = 'Y'
+        <choose>
+            <when test="memberId != null">
+                AND c.member_id = #{memberId}
+            </when>
+            <otherwise>
+                AND c.guest_id = #{guestId}
+                AND c.member_id IS NULL
+            </otherwise>
+        </choose>
+        ORDER BY c.created_at DESC, c.cart_id DESC
+    </select>
+
+    <!-- 동일 상품 및 중량 조회 -->
+    <select id="selectCartItem" resultMap="cartResultMap">
+        SELECT
+        c.cart_id,
+        c.member_id,
+        c.guest_id,
+        c.product_id,
+        c.weight_gram,
+        c.quantity,
+        c.created_at,
+        c.updated_at
+        FROM cart c
+        WHERE c.product_id = #{productId}
+        AND c.weight_gram = #{weightGram}
+        <choose>
+            <when test="memberId != null">
+                AND c.member_id = #{memberId}
+            </when>
+            <otherwise>
+                AND c.guest_id = #{guestId}
+                AND c.member_id IS NULL
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 장바구니 상품 등록 -->
+    <insert id="insertCart" parameterType="com.portfolio.portfolio.Vo.order.CartVO"
+            useGeneratedKeys="true" keyProperty="cartId" keyColumn="cart_id">
+        INSERT INTO cart (
+        member_id,
+        guest_id,
+        product_id,
+        weight_gram,
+        quantity
+        )
+        VALUES (
+        #{memberId},
+        #{guestId},
+        #{productId},
+        #{weightGram},
+        #{quantity}
+        )
+    </insert>
+
+    <!-- 동일 상품 추가 시 수량 증가 -->
+    <update id="increaseCartQuantity">
+        UPDATE cart
+        SET quantity = quantity + #{quantity},
+        updated_at = CURRENT_TIMESTAMP
+        WHERE cart_id = #{cartId}
+        <choose>
+            <when test="memberId != null">
+                AND member_id = #{memberId}
+            </when>
+            <otherwise>
+                AND guest_id = #{guestId}
+                AND member_id IS NULL
+            </otherwise>
+        </choose>
+    </update>
+
+    <!-- 장바구니 상품 수량 변경 -->
+    <update id="updateCartQuantity">
+        UPDATE cart
+        SET quantity = #{quantity},
+        updated_at = CURRENT_TIMESTAMP
+        WHERE cart_id = #{cartId}
+        <choose>
+            <when test="memberId != null">
+                AND member_id = #{memberId}
+            </when>
+            <otherwise>
+                AND guest_id = #{guestId}
+                AND member_id IS NULL
+            </otherwise>
+        </choose>
+    </update>
+
+    <!-- 장바구니 상품 삭제 -->
+    <delete id="deleteCart">
+        DELETE FROM cart
+        WHERE cart_id = #{cartId}
+        <choose>
+            <when test="memberId != null">
+                AND member_id = #{memberId}
+            </when>
+            <otherwise>
+                AND guest_id = #{guestId}
+                AND member_id IS NULL
+            </otherwise>
+        </choose>
+    </delete>
+
+</mapper>

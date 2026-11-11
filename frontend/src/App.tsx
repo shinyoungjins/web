@@ -1,54 +1,68 @@
 
-import Header from './components/Header';
-import Home from './pages/Home';
-import Footer from './components/Footer';
-import Slideshow from './components/Slideshow';
-import ScrollButtons from './components/ScrollButtons';
-import './App.css';
+import Header from "./components/Header";
+import Slideshow from "./components/Slideshow";
+import Footer from "./components/Footer";
+import ScrollButtons from "./components/ScrollButtons";
+
+import Home from "./pages/Home";
+import ProductList from "./pages/ProductList";
+import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
+
+import "./App.css";
 
 function App() {
+    const pathname = window.location.pathname;
+
+    // 상품 목록 페이지
+    const isProductListPage =
+        pathname === "/products" ||
+        pathname === "/products/";
+
+    // 상품 상세 페이지 (/products/9)
+    const isProductDetailPage =
+        /^\/products\/\d+\/?$/.test(pathname);
+
+    // 장바구니 페이지
+    const isCartPage =
+        pathname === "/cart" ||
+        pathname === "/cart/";
+
+    // 페이지별 콘텐츠
+    const renderContent = () => {
+        // 장바구니 페이지
+        if (isCartPage) {
+            return <Cart />;
+        }
+
+        // 상품 상세 페이지
+        if (isProductDetailPage) {
+            return <ProductDetail />;
+        }
+
+        // 상품 목록 페이지
+        if (isProductListPage) {
+            return <ProductList />;
+        }
+
+        // 홈 화면
+        return (
+            <>
+                <Slideshow />
+                <Home />
+            </>
+        );
+    };
+
     return (
-        <div className="app-layout">
+        <>
             <Header />
-
-            <section className="main-banner">
-                <div className="banner-left">
-                    <Slideshow />
-                </div>
-
-                <div className="banner-right">
-                    <h2>LOGIN</h2>
-
-                    <form onSubmit={(e) => e.preventDefault()}>
-                        <input
-                            type="text"
-                            placeholder="아이디"
-                            aria-label="아이디"
-                        />
-
-                        <input
-                            type="password"
-                            placeholder="비밀번호"
-                            aria-label="비밀번호"
-                        />
-
-                        <button type="submit">
-                            로그인
-                        </button>
-                    </form>
-
-                    <div className="login-links">
-                        <a href="#signup">회원가입</a>
-                        <span>|</span>
-                        <a href="#find-account">계정 찾기</a>
-                    </div>
-                </div>
-            </section>
-
-            <Home />
+            <main>
+                {renderContent()}
+            </main>
             <Footer />
             <ScrollButtons />
-        </div>
+        </>
     );
 }
 

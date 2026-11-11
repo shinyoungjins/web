@@ -1,7 +1,7 @@
-package com.portfolio.portfolio.Controller;
+package com.portfolio.portfolio.Controller.member;
 
-import com.portfolio.portfolio.Service.MemberService;
-import com.portfolio.portfolio.Vo.MemberVO;
+import com.portfolio.portfolio.Service.member.MemberService;
+import com.portfolio.portfolio.Vo.member.MemberVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

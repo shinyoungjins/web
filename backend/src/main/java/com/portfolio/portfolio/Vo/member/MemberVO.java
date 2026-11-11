@@ -1,4 +1,4 @@
-package com.portfolio.portfolio.Vo;
+package com.portfolio.portfolio.Vo.member;
 
 import lombok.Data;
 
