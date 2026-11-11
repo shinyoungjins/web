@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 공지사항 Mapper -->
+<mapper namespace="com.portfolio.portfolio.Mapper.notice.NoticeMapper">
+
+    <!-- 공지사항 목록 조회 -->
+    <select id="selectNoticeList"
+            resultType="com.portfolio.portfolio.Vo.notice.NoticeVO">
+
+        SELECT
+        notice_id  AS "noticeId"   /* 공지사항 ID */
+        , title      AS "title"      /* 공지사항 제목 */
+        , content    AS "content"    /* 공지사항 내용 */
+        , view_count AS "viewCount"  /* 조회수 */
+        , use_yn     AS "useYn"      /* 사용 여부 */
+        , created_at AS "createdAt"  /* 등록 일시 */
+        , updated_at AS "updatedAt"  /* 수정 일시 */
+        FROM notice
+        WHERE use_yn = 'Y'
+        ORDER BY notice_id DESC
+
+    </select>
+
+    <!-- 공지사항 상세 조회 (공지사항 ID 기준) -->
+    <select id="selectNoticeById"
+            parameterType="java.lang.Long"
+            resultType="com.portfolio.portfolio.Vo.notice.NoticeVO">
+
+        SELECT
+        notice_id  AS "noticeId"   /* 공지사항 ID */
+        , title      AS "title"      /* 공지사항 제목 */
+        , content    AS "content"    /* 공지사항 내용 */
+        , view_count AS "viewCount"  /* 조회수 */
+        , use_yn     AS "useYn"      /* 사용 여부 */
+        , created_at AS "createdAt"  /* 등록 일시 */
+        , updated_at AS "updatedAt"  /* 수정 일시 */
+        FROM notice
+        WHERE notice_id = #{noticeId}
+        AND use_yn = 'Y'
+
+    </select>
+
+    <!-- 공지사항 조회수 증가 -->
+    <update id="updateNoticeViewCount"
+            parameterType="java.lang.Long">
+
+        UPDATE notice
+        SET view_count = view_count + 1
+        WHERE notice_id = #{noticeId}
+        AND use_yn = 'Y'
+
+    </update>
+
+</mapper>

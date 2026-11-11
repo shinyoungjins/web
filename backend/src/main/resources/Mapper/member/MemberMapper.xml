@@ -5,14 +5,4 @@
 
 <mapper namespace="com.portfolio.portfolio.Mapper.member.MemberMapper">
 
-    <select id="selectMemberList" resultType="com.portfolio.portfolio.Vo.member.MemberVO">
-        SELECT
-        id,
-        name,
-        email,
-        created_at AS "createdAt"
-        FROM members
-        ORDER BY id
-    </select>
-
 </mapper>

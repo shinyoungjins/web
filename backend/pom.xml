@@ -80,6 +80,23 @@
 			<version>4.0.1</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- 비밀번호 BCrypt 암호화 -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
+		</dependency>
+
+		<!-- Spring Security 인증 및 권한 관리 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security</artifactId>
+		</dependency>
+
+		<!-- 카카오 OAuth2 / OpenID Connect 로그인 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-security-oauth2-client</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

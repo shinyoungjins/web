@@ -9,7 +9,7 @@ import type {
     ProductCategory,
 } from "../api/productApi";
 
-import "../styles/ProductSlider.css";
+import "../styles/ProductList.css";
 
 const DEFAULT_WEIGHT = 200;
 
@@ -108,7 +108,7 @@ export default function ProductList() {
     }, [category]);
 
     return (
-        <section className="product-section">
+        <section className="product-section product-list-page">
             <div className="product-section-header">
                 <h2>{CATEGORY_NAMES[category]}</h2>
                 <p>신선하고 품질 좋은 소고기를 만나보세요.</p>

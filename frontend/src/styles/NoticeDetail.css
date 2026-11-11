@@ -1,0 +1,157 @@
+
+/* 공지사항 상세 페이지 전체 영역 */
+.notice-detail-page {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 30px 100px;
+    box-sizing: border-box;
+}
+
+/* 공지사항 상단 제목 */
+.notice-detail-header {
+    text-align: center;
+    padding-bottom: 40px;
+    margin-bottom: 55px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.notice-detail-header h1 {
+    margin: 0 0 15px;
+    font-size: 34px;
+    font-weight: 700;
+    color: #222;
+}
+
+.notice-detail-header p {
+    margin: 0;
+    font-size: 16px;
+    color: #888;
+}
+
+/* 공지사항 제목 및 작성 정보 */
+.notice-detail-info {
+    padding: 30px 20px;
+    border-top: 2px solid #333;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.notice-detail-info h2 {
+    margin: 0 0 22px;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.6;
+    color: #222;
+}
+
+/* 작성일 및 조회수 */
+.notice-detail-meta {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    font-size: 14px;
+    color: #888;
+}
+
+/* 공지사항 본문 */
+.notice-detail-content {
+    min-height: 300px;
+    padding: 45px 20px;
+    border-bottom: 1px solid #e5e5e5;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 2;
+    color: #444;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* 목록으로 버튼 영역 */
+.notice-detail-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+/* 목록으로 버튼 */
+.notice-detail-actions button,
+.notice-detail-status button {
+    min-width: 140px;
+    height: 46px;
+    padding: 0 25px;
+    background-color: #333;
+    border: 1px solid #333;
+    border-radius: 6px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.notice-detail-actions button:hover,
+.notice-detail-status button:hover {
+    background-color: #555;
+}
+
+/* 로딩 및 오류 안내 */
+.notice-detail-status {
+    padding: 80px 20px;
+    text-align: center;
+    font-size: 16px;
+    color: #777;
+}
+
+.notice-detail-error {
+    color: #d32f2f;
+}
+
+.notice-detail-status button {
+    margin-top: 25px;
+}
+
+/* 태블릿 */
+@media (max-width: 900px) {
+    .notice-detail-page {
+        padding: 50px 25px 80px;
+    }
+
+    .notice-detail-info h2 {
+        font-size: 22px;
+    }
+}
+
+/* 모바일 */
+@media (max-width: 600px) {
+    .notice-detail-page {
+        padding: 40px 20px 70px;
+    }
+
+    .notice-detail-header {
+        margin-bottom: 35px;
+    }
+
+    .notice-detail-header h1 {
+        font-size: 28px;
+    }
+
+    .notice-detail-info {
+        padding: 25px 10px;
+    }
+
+    .notice-detail-info h2 {
+        font-size: 20px;
+    }
+
+    .notice-detail-meta {
+        gap: 15px;
+        font-size: 12px;
+    }
+
+    .notice-detail-content {
+        min-height: 250px;
+        padding: 30px 10px;
+        font-size: 14px;
+    }
+}

@@ -8,44 +8,68 @@ import Home from "./pages/Home";
 import ProductList from "./pages/ProductList";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import About from "./pages/About";
+import NoticePage from "./pages/Notice";
+import NoticeDetail from "./pages/NoticeDetail";
 
 import "./App.css";
 
 function App() {
     const pathname = window.location.pathname;
 
-    // 상품 목록 페이지
+    /* 상품 목록 페이지 */
     const isProductListPage =
-        pathname === "/products" ||
-        pathname === "/products/";
+        pathname === "/products" || pathname === "/products/";
 
-    // 상품 상세 페이지 (/products/9)
+    /* 상품 상세 페이지 */
     const isProductDetailPage =
         /^\/products\/\d+\/?$/.test(pathname);
 
-    // 장바구니 페이지
+    /* 장바구니 페이지 */
     const isCartPage =
-        pathname === "/cart" ||
-        pathname === "/cart/";
+        pathname === "/cart" || pathname === "/cart/";
 
-    // 페이지별 콘텐츠
+    /* 회사소개 페이지 */
+    const isAboutPage =
+        pathname === "/about" || pathname === "/about/";
+
+    /* 공지사항 목록 페이지 */
+    const isNoticePage =
+        pathname === "/notice" || pathname === "/notice/";
+
+    /* 공지사항 상세 페이지 */
+    const isNoticeDetailPage =
+        /^\/notice\/\d+\/?$/.test(pathname);
+
+    /**
+     * 현재 URL에 따른 페이지 렌더링
+     */
     const renderContent = () => {
-        // 장바구니 페이지
         if (isCartPage) {
             return <Cart />;
         }
 
-        // 상품 상세 페이지
         if (isProductDetailPage) {
             return <ProductDetail />;
         }
 
-        // 상품 목록 페이지
         if (isProductListPage) {
             return <ProductList />;
         }
 
-        // 홈 화면
+        if (isAboutPage) {
+            return <About />;
+        }
+
+        if (isNoticeDetailPage) {
+            return <NoticeDetail />;
+        }
+
+        if (isNoticePage) {
+            return <NoticePage />;
+        }
+
+        /* 기본 홈 화면 */
         return (
             <>
                 <Slideshow />
@@ -57,9 +81,11 @@ function App() {
     return (
         <>
             <Header />
+
             <main>
                 {renderContent()}
             </main>
+
             <Footer />
             <ScrollButtons />
         </>
