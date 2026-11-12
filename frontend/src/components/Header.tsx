@@ -5,8 +5,24 @@ import { getMenuList } from "../api/menuApi";
 import mainMark from "../assets/mainMark.png";
 import "../styles/Header.css";
 
+/**
+ * 로그인 회원 정보
+ */
+interface AuthUser {
+    authenticated: boolean;
+    memberId?: number;
+    memberName?: string;
+    email?: string | null;
+    role?: string;
+    provider?: string;
+}
+
 export default function Header() {
     const [menus, setMenus] = useState<SiteMenu[]>([]);
+
+    // 로그인 회원 정보
+    const [user, setUser] = useState<AuthUser | null>(null);
+    const [authLoading, setAuthLoading] = useState(true);
 
     useEffect(() => {
         const loadMenus = async () => {
@@ -19,6 +35,39 @@ export default function Header() {
         };
 
         loadMenus();
+    }, []);
+
+    useEffect(() => {
+        /**
+         * 현재 로그인한 회원 정보 조회
+         */
+        const loadUser = async () => {
+            try {
+                const response = await fetch("/api/auth/me", {
+                    credentials: "include",
+                });
+
+                if (!response.ok) {
+                    throw new Error("로그인 정보 조회 실패");
+                }
+
+                const data: AuthUser = await response.json();
+                console.log("헤더 로그인 정보:", data);
+
+                if (data.authenticated) {
+                    setUser(data);
+                } else {
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error("로그인 정보 조회 실패:", error);
+                setUser(null);
+            } finally {
+                setAuthLoading(false);
+            }
+        };
+
+        loadUser();
     }, []);
 
     // 상위 메뉴
@@ -36,8 +85,20 @@ export default function Header() {
     return (
         <header className="site-header">
             <div className="header-user-menu">
-                <a href="/login">로그인</a>
-                <a href="/signup">회원가입</a>
+                {!authLoading && (
+                    user ? (
+                        <>
+                            <span className="header-user-name">
+                                {user.memberName || "회원"}님
+                            </span>
+                            <a href="/mypage">마이페이지</a>
+                            <a href="http://localhost:8080/logout">로그아웃</a>
+                        </>
+                    ) : (
+                        <a href="/login">로그인</a>
+                    )
+                )}
+
                 <a href="/cart">장바구니</a>
             </div>
 

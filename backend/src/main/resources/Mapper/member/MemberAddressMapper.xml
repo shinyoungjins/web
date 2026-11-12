@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.portfolio.portfolio.Mapper.member.MemberAddressMapper">
+
+    <!-- =====================================================
+         회원 배송지 조회 결과 매핑
+         ===================================================== -->
+    <resultMap id="memberAddressResultMap"
+               type="com.portfolio.portfolio.Vo.member.MemberAddressVo">
+
+        <id property="addressId" column="address_id"/>
+
+        <result property="memberId" column="member_id"/>
+        <result property="addressName" column="address_name"/>
+        <result property="recipientName" column="recipient_name"/>
+        <result property="recipientPhone" column="recipient_phone"/>
+        <result property="zipcode" column="zipcode"/>
+        <result property="address" column="address"/>
+        <result property="addressDetail" column="address_detail"/>
+        <result property="isDefault" column="is_default"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+
+    </resultMap>
+
+    <!-- =====================================================
+         1. 회원별 배송지 목록 조회
+
+         - 본인 배송지만 조회
+         - 기본 배송지 우선 정렬
+         - 최근 등록 배송지 우선 정렬
+         ===================================================== -->
+    <select id="selectMemberAddressList"
+            resultMap="memberAddressResultMap">
+
+        SELECT
+        address_id,
+        member_id,
+        address_name,
+        recipient_name,
+        recipient_phone,
+        zipcode,
+        address,
+        address_detail,
+        is_default,
+        created_at,
+        updated_at
+        FROM member_address
+        WHERE member_id = #{memberId}
+        ORDER BY
+        is_default DESC,
+        created_at DESC,
+        address_id DESC
+
+    </select>
+
+    <!-- =====================================================
+         2. 배송지 상세 조회
+
+         - 회원번호와 배송지번호 동시 확인
+         - 다른 회원 배송지 접근 방지
+         ===================================================== -->
+    <select id="selectMemberAddress"
+            resultMap="memberAddressResultMap">
+
+        SELECT
+        address_id,
+        member_id,
+        address_name,
+        recipient_name,
+        recipient_phone,
+        zipcode,
+        address,
+        address_detail,
+        is_default,
+        created_at,
+        updated_at
+        FROM member_address
+        WHERE member_id = #{memberId}
+        AND address_id = #{addressId}
+
+    </select>
+
+    <!-- =====================================================
+         3. 회원 배송지 개수 조회
+         ===================================================== -->
+    <select id="countMemberAddresses"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM member_address
+        WHERE member_id = #{memberId}
+
+    </select>
+
+    <!-- =====================================================
+         4. 배송지 등록
+
+         - 생성된 address_id를 VO에 저장
+         - 기본 배송지 여부는 Service에서 결정
+         ===================================================== -->
+    <insert id="insertMemberAddress"
+            parameterType="com.portfolio.portfolio.Vo.member.MemberAddressVo"
+            useGeneratedKeys="true"
+            keyProperty="addressId"
+            keyColumn="address_id">
+
+        INSERT INTO member_address (
+        member_id,
+        address_name,
+        recipient_name,
+        recipient_phone,
+        zipcode,
+        address,
+        address_detail,
+        is_default,
+        created_at,
+        updated_at
+        )
+        VALUES (
+        #{memberId},
+        #{addressName},
+        #{recipientName},
+        #{recipientPhone},
+        #{zipcode},
+        #{address},
+        #{addressDetail},
+        #{isDefault},
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+        )
+
+    </insert>
+
+    <!-- =====================================================
+         5. 배송지 수정
+
+         - 본인 배송지만 수정
+         - 기본 배송지 여부는 별도 메서드에서 관리
+         ===================================================== -->
+    <update id="updateMemberAddress"
+            parameterType="com.portfolio.portfolio.Vo.member.MemberAddressVo">
+
+        UPDATE member_address
+        SET
+        address_name = #{addressName},
+        recipient_name = #{recipientName},
+        recipient_phone = #{recipientPhone},
+        zipcode = #{zipcode},
+        address = #{address},
+        address_detail = #{addressDetail},
+        updated_at = CURRENT_TIMESTAMP
+        WHERE member_id = #{memberId}
+        AND address_id = #{addressId}
+
+    </update>
+
+    <!-- =====================================================
+         6. 배송지 삭제
+
+         - 본인 배송지만 삭제
+         ===================================================== -->
+    <delete id="deleteMemberAddress">
+
+        DELETE FROM member_address
+        WHERE member_id = #{memberId}
+        AND address_id = #{addressId}
+
+    </delete>
+
+    <!-- =====================================================
+         7. 기존 기본 배송지 설정 해제
+
+         - 해당 회원의 기본 배송지만 해제
+         ===================================================== -->
+    <update id="clearDefaultAddress">
+
+        UPDATE member_address
+        SET
+        is_default = FALSE,
+        updated_at = CURRENT_TIMESTAMP
+        WHERE member_id = #{memberId}
+        AND is_default = TRUE
+
+    </update>
+
+    <!-- =====================================================
+         8. 선택한 배송지를 기본 배송지로 설정
+
+         - 회원번호와 배송지번호 동시 확인
+         ===================================================== -->
+    <update id="setDefaultAddress">
+
+        UPDATE member_address
+        SET
+        is_default = TRUE,
+        updated_at = CURRENT_TIMESTAMP
+        WHERE member_id = #{memberId}
+        AND address_id = #{addressId}
+
+    </update>
+
+</mapper>

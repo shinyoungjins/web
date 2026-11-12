@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.portfolio.portfolio.Mapper.auth.SocialMemberMapper">
+
+    <!-- 소셜 계정으로 기존 회원 조회 -->
+    <select id="selectSocialMember"
+            resultType="com.portfolio.portfolio.Vo.auth.SocialMemberVo">
+
+        SELECT
+        m.member_id,
+        m.member_name,
+        m.email,
+        m.phone,
+        m.role,
+        m.use_yn,
+        m.created_at,
+        m.updated_at,
+        ms.social_id,
+        ms.provider,
+        ms.provider_user_id
+        FROM member_social ms
+        INNER JOIN member m
+        ON ms.member_id = m.member_id
+        WHERE ms.provider = #{provider}
+        AND ms.provider_user_id = #{providerUserId}
+
+    </select>
+
+    <!-- 신규 회원 등록 -->
+    <insert id="insertMember"
+            parameterType="com.portfolio.portfolio.Vo.auth.SocialMemberVo"
+            useGeneratedKeys="true"
+            keyProperty="memberId"
+            keyColumn="member_id">
+
+        INSERT INTO member (
+        member_name,
+        email,
+        role,
+        use_yn,
+        created_at,
+        updated_at
+        )
+        VALUES (
+        #{memberName},
+        #{email},
+        'USER',
+        'Y',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP
+        )
+
+    </insert>
+
+    <!-- 소셜 계정 연결 -->
+    <insert id="insertMemberSocial"
+            parameterType="com.portfolio.portfolio.Vo.auth.SocialMemberVo">
+
+        INSERT INTO member_social (
+        member_id,
+        provider,
+        provider_user_id,
+        created_at
+        )
+        VALUES (
+        #{memberId},
+        #{provider},
+        #{providerUserId},
+        CURRENT_TIMESTAMP
+        )
+
+    </insert>
+
+    <!-- 회원 정보 수정 -->
+    <update id="updateMemberProfile">
+        UPDATE member
+        SET
+        member_name = #{memberName},
+        phone = #{phone},
+        email = #{email},
+        updated_at = CURRENT_TIMESTAMP
+        WHERE member_id = #{memberId}
+        AND use_yn = 'Y'
+    </update>
+
+</mapper>

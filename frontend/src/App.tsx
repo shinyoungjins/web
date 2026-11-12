@@ -11,11 +11,21 @@ import Cart from "./pages/Cart";
 import About from "./pages/About";
 import NoticePage from "./pages/Notice";
 import NoticeDetail from "./pages/NoticeDetail";
+import Login from "./pages/Login";
+import MyPage from "./pages/MyPage";
 
 import "./App.css";
 
 function App() {
     const pathname = window.location.pathname;
+
+    /* 로그인 페이지 */
+    const isLoginPage =
+        pathname === "/login" || pathname === "/login/";
+
+    /* 마이페이지 */
+    const isMyPage =
+        pathname === "/mypage" || pathname === "/mypage/";
 
     /* 상품 목록 페이지 */
     const isProductListPage =
@@ -45,6 +55,14 @@ function App() {
      * 현재 URL에 따른 페이지 렌더링
      */
     const renderContent = () => {
+        if (isLoginPage) {
+            return <Login />;
+        }
+
+        if (isMyPage) {
+            return <MyPage />;
+        }
+
         if (isCartPage) {
             return <Cart />;
         }
