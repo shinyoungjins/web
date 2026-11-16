@@ -1,0 +1,33 @@
+/* 주문서 작성 페이지 */
+.checkout-page { max-width: 1040px; margin: 44px auto 80px; padding: 0 24px; color: #222; }
+.checkout-page h1 { font-size: 30px; margin: 0 0 30px; }
+.checkout-panel { background: #fff; border: 1px solid #e6e6e6; border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+.checkout-panel h2 { font-size: 20px; margin: 0 0 22px; }
+.checkout-table-wrap { overflow-x: auto; }
+.checkout-table-wrap table { width: 100%; border-collapse: collapse; min-width: 520px; }
+.checkout-table-wrap th, .checkout-table-wrap td { padding: 15px 12px; text-align: left; border-bottom: 1px solid #eee; }
+.checkout-table-wrap th { background: #f7f7f7; font-weight: 600; }
+.checkout-radio-row, .checkout-payment { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 22px; }
+.checkout-radio-row label, .checkout-payment label { display: inline-flex; gap: 8px; align-items: center; cursor: pointer; }
+.checkout-disabled { color: #999; cursor: not-allowed !important; }
+.checkout-field { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+.checkout-field > label { font-size: 14px; font-weight: 600; }
+.checkout-field input, .checkout-field select, .checkout-field textarea { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #d7d7d7; border-radius: 7px; font: inherit; background: white; color: #222; }
+.checkout-field input[readonly] { background: #f8f8f8; }
+.checkout-postcode { display: flex; gap: 10px; }
+.checkout-postcode button { flex-shrink: 0; padding: 0 20px; border: 1px solid #222; background: #fff; color: #222; border-radius: 7px; cursor: pointer; }
+.checkout-address-summary { padding: 18px; border-radius: 8px; background: #f8f8f8; margin: 12px 0 24px; }
+.checkout-address-summary p { margin: 8px 0 0; color: #555; }
+.checkout-new-address { margin-bottom: 22px; }
+.checkout-total { display: flex; justify-content: space-between; gap: 16px; align-items: center; font-size: 22px; }
+.checkout-total strong:last-child { font-size: 28px; }
+.checkout-note { color: #777; font-size: 13px; margin: 16px 0; }
+.checkout-error { padding: 12px; color: #b42318; background: #fff1f0; border-radius: 7px; }
+.checkout-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 22px; }
+.checkout-actions button { padding: 14px 26px; border-radius: 7px; cursor: pointer; font: inherit; font-weight: 600; }
+.checkout-back { background: white; border: 1px solid #ccc; color: #222; }
+.checkout-submit { background: #222; border: 1px solid #222; color: white; }
+.checkout-actions button:disabled { opacity: .5; cursor: not-allowed; }
+.checkout-success { text-align: center; padding-top: 90px; }
+.checkout-success a { display: inline-block; margin-top: 20px; color: #222; }
+@media (max-width: 600px) { .checkout-page { padding: 0 14px; margin-top: 24px; } .checkout-panel { padding: 18px; } .checkout-total { font-size: 16px; } .checkout-total strong:last-child { font-size: 21px; } .checkout-actions button { flex: 1; padding: 13px 10px; } }

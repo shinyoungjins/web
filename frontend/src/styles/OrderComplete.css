@@ -1,0 +1,26 @@
+/* 주문 완료 페이지 */
+.order-complete-page { max-width: 1040px; margin: 44px auto 80px; padding: 0 24px; color: #222; }
+.order-complete-heading { text-align: center; padding: 26px 0 34px; }
+.order-complete-heading h1 { font-size: 30px; margin: 16px 0 10px; }
+.order-complete-heading p { color: #666; margin: 0; line-height: 1.6; }
+.order-complete-check { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto; display: grid; place-items: center; background: #222; color: #fff; font-size: 34px; }
+.order-complete-panel { background: #fff; border: 1px solid #e6e6e6; border-radius: 12px; padding: 28px; margin-bottom: 20px; }
+.order-complete-panel h2 { font-size: 20px; margin: 0 0 20px; }
+.order-complete-row { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 18px; padding: 12px 0; border-bottom: 1px solid #f1f1f1; line-height: 1.5; }
+.order-complete-row:last-child { border-bottom: 0; }
+.order-complete-row span { color: #777; }
+.order-complete-row strong { overflow-wrap: anywhere; font-weight: 600; }
+.order-complete-table-wrap { overflow-x: auto; }
+.order-complete-table-wrap table { width: 100%; border-collapse: collapse; min-width: 520px; }
+.order-complete-table-wrap th, .order-complete-table-wrap td { padding: 15px 12px; text-align: left; border-bottom: 1px solid #eee; }
+.order-complete-table-wrap th { background: #f7f7f7; }
+.order-complete-note { font-size: 13px; color: #777; margin: 15px 0; }
+.order-complete-total { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-top: 20px; font-size: 18px; }
+.order-complete-total strong { font-size: 26px; }
+.order-complete-actions { display: flex; justify-content: center; gap: 12px; margin-top: 28px; }
+.order-complete-actions a, .order-complete-empty a { text-decoration: none; padding: 14px 28px; border-radius: 7px; font-weight: 600; text-align: center; }
+.order-complete-primary { background: #222; color: #fff; border: 1px solid #222; }
+.order-complete-secondary { background: #fff; color: #222; border: 1px solid #ccc; }
+.order-complete-empty { text-align: center; padding: 60px 20px; }
+.order-complete-empty p { color: #666; margin-bottom: 30px; }
+@media (max-width: 600px) { .order-complete-page { padding: 0 14px; margin-top: 24px; } .order-complete-panel { padding: 18px; } .order-complete-row { grid-template-columns: 90px minmax(0, 1fr); gap: 10px; } .order-complete-total strong { font-size: 21px; } .order-complete-actions a { flex: 1; padding: 13px 8px; } }

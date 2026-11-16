@@ -44,4 +44,7 @@ public class OrderHistoryVo {
 
     /* 주문일시 */
     private LocalDateTime createdAt;
+
+    private String orderStatusName;
+    private String paymentStatusName;
 }

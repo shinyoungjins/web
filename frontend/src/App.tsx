@@ -13,6 +13,8 @@ import NoticePage from "./pages/Notice";
 import NoticeDetail from "./pages/NoticeDetail";
 import Login from "./pages/Login";
 import MyPage from "./pages/MyPage";
+import OrderCheckout from "./pages/OrderCheckout";
+import OrderComplete from "./pages/OrderComplete";
 
 import "./App.css";
 
@@ -26,6 +28,12 @@ function App() {
     /* 마이페이지 */
     const isMyPage =
         pathname === "/mypage" || pathname === "/mypage/";
+
+    /* 주문서 작성 페이지 */
+    const isOrderCheckoutPage = pathname === "/order/checkout" || pathname === "/order/checkout/";
+
+    /* 주문 완료 페이지 */
+    const isOrderCompletePage = pathname === "/order/complete" || pathname === "/order/complete/";
 
     /* 상품 목록 페이지 */
     const isProductListPage =
@@ -61,6 +69,14 @@ function App() {
 
         if (isMyPage) {
             return <MyPage />;
+        }
+
+        if (isOrderCheckoutPage) {
+            return <OrderCheckout />;
+        }
+
+        if (isOrderCompletePage) {
+            return <OrderComplete />;
         }
 
         if (isCartPage) {

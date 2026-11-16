@@ -1,6 +1,8 @@
 
 import { useEffect, useState } from "react";
 import "../styles/MyPage.css";
+import { getProductDetail, calculateProductPrice } from "../api/productApi";
+import { addCart } from "../api/cartApi";
 
 /* 로그인 회원 정보 */
 interface MemberInfo {
@@ -61,6 +63,8 @@ interface OrderHistory {
     paymentStatus: string;
     totalAmount: number;
     createdAt: string;
+    orderStatusName?: string;
+    paymentStatusName?: string;
 }
 
 /* 과거 주문 상품 상세 */
@@ -74,6 +78,16 @@ interface OrderItem {
     totalAmount: number;
     createdAt: string;
     updatedAt: string;
+}
+
+/* 간편 재주문 상품 */
+interface ReorderItem {
+    orderItemId: number;
+    productId: number;
+    productName: string;
+    pricePerKg: number | null;
+    weight: number;
+    quantity: number;
 }
 
 /* 회원 정보 수정 API 응답 */
@@ -152,7 +166,11 @@ export default function MyPage() {
 
     /* 마이페이지 상단 탭 */
     const [activeTab, setActiveTab] =
-        useState<"member" | "order">("member");
+        useState<"member" | "order">(
+            new URLSearchParams(window.location.search).get("tab") === "order"
+                ? "order"
+                : "member"
+        );
 
     /* 회원 정보 수정 상태 */
     const [editing, setEditing] = useState(false);
@@ -206,6 +224,11 @@ export default function MyPage() {
 
     const [orderHistoryError, setOrderHistoryError] = useState("");
 
+    /* 주문 취소 처리 상태 및 결과 */
+    const [cancellingOrderId, setCancellingOrderId] = useState<number | null>(null);
+    const [cancelOrderMessage, setCancelOrderMessage] = useState("");
+    const [cancelOrderError, setCancelOrderError] = useState("");
+
     /* 선택한 과거 주문 */
     const [selectedOrderId, setSelectedOrderId] = useState("");
 
@@ -217,6 +240,12 @@ export default function MyPage() {
         useState(false);
 
     const [orderItemsError, setOrderItemsError] = useState("");
+
+    /* 현재 판매가격을 적용한 간편 재주문 목록 */
+    const [reorderItems, setReorderItems] = useState<ReorderItem[]>([]);
+    const [reorderLoading, setReorderLoading] = useState(false);
+    const [reorderError, setReorderError] = useState("");
+    const [addingReorderToCart, setAddingReorderToCart] = useState(false);
 
     /**
      * 로그인한 회원 정보 조회
@@ -422,6 +451,62 @@ export default function MyPage() {
     }, [user?.memberId, activeTab, selectedAddressId]);
 
     /**
+     * 주문접수 상태의 주문 취소
+     *
+     * POST /api/orders/{orderId}/cancel
+     * - 취소 성공 후 주문 내역 및 미수금 다시 조회
+     */
+    const handleCancelOrder = async (order: OrderHistory) => {
+        if (cancellingOrderId !== null || order.orderStatus !== "PENDING") return;
+
+        const confirmed = window.confirm(
+            `주문번호 ${order.orderNo}을(를) 취소하시겠습니까?\n취소 시 주문 상품 재고가 복구됩니다.`
+        );
+        if (!confirmed) return;
+
+        setCancellingOrderId(order.orderId);
+        setCancelOrderError("");
+        setCancelOrderMessage("");
+
+        try {
+            const response = await fetch(`/api/orders/${order.orderId}/cancel`, {
+                method: "POST",
+                credentials: "include",
+            });
+            const data = await response.json().catch(() => null);
+            if (!response.ok) {
+                throw new Error(data?.message || "주문 취소에 실패했습니다.");
+            }
+
+            /* 선택한 주문을 유지하고 서버의 최신 상태로 갱신 */
+            setOrderHistory((previous) => previous.map((item) =>
+                item.orderId === order.orderId
+                    ? { ...item, orderStatus: "CANCELLED", orderStatusName: "주문취소" }
+                    : item
+            ));
+            setCancelOrderMessage(data?.message || "주문이 취소되었습니다.");
+
+            /* 서버에서 최신 주문 상태 및 미수금 재조회 */
+            try {
+                const historyResponse = await fetch(
+                    `/api/orders/history?addressId=${encodeURIComponent(selectedAddressId)}`,
+                    { method: "GET", credentials: "include" }
+                );
+                if (!historyResponse.ok) throw new Error("주문 내역 새로고침에 실패했습니다.");
+                const history: OrderHistory[] = await historyResponse.json();
+                setOrderHistory(history);
+            } catch {
+                setCancelOrderError("취소는 완료됐지만 주문 내역 새로고침에 실패했습니다. 페이지를 새로고침해 주세요.");
+            }
+            await loadReceivable();
+        } catch (err) {
+            setCancelOrderError(err instanceof Error ? err.message : "주문 취소 중 오류가 발생했습니다.");
+        } finally {
+            setCancellingOrderId(null);
+        }
+    };
+
+    /**
      * 선택한 주문의 상품 상세 조회
      *
      * GET /api/orders/history/{orderId}/items
@@ -483,6 +568,145 @@ export default function MyPage() {
         return () => controller.abort();
 
     }, [user?.memberId, activeTab, selectedOrderId]);
+
+    /**
+     * 선택한 과거 주문 상품을 재주문 목록으로 변환
+     *
+     * 상품별 현재 판매가격은 상품 상세 API에서 조회합니다.
+     */
+    useEffect(() => {
+        setReorderItems([]);
+        setReorderError("");
+
+        if (!selectedOrderId || orderItemsLoading || orderItemsError || orderItems.length === 0) {
+            setReorderLoading(false);
+            return;
+        }
+
+        let cancelled = false;
+
+        const loadReorderItems = async () => {
+            setReorderLoading(true);
+
+            try {
+                const items = await Promise.all(
+                    orderItems.map(async (item): Promise<ReorderItem> => {
+                        const product = await getProductDetail(item.productId);
+                        return {
+                            orderItemId: item.orderItemId,
+                            productId: item.productId,
+                            productName: product.productName,
+                            pricePerKg: product.pricePerKg,
+                            weight: 1,
+                            quantity: 1,
+                        };
+                    })
+                );
+
+                if (!cancelled) setReorderItems(items);
+            } catch (err) {
+                if (!cancelled) {
+                    setReorderError(err instanceof Error ? err.message : "현재 상품 정보를 불러오지 못했습니다.");
+                }
+            } finally {
+                if (!cancelled) setReorderLoading(false);
+            }
+        };
+
+        void loadReorderItems();
+        return () => { cancelled = true; };
+    }, [selectedOrderId, orderItems, orderItemsLoading, orderItemsError]);
+
+    /**
+     * 재주문 상품 중량 변경
+     */
+    const changeReorderWeight = (orderItemId: number, weight: number) => {
+        setReorderItems((previous) => previous.map((item) =>
+            item.orderItemId === orderItemId ? { ...item, weight } : item
+        ));
+    };
+
+    /**
+     * 재주문 상품 수량 변경 (최소 1개)
+     */
+    const changeReorderQuantity = (orderItemId: number, difference: number) => {
+        setReorderItems((previous) => previous.map((item) =>
+            item.orderItemId === orderItemId
+                ? { ...item, quantity: Math.max(1, item.quantity + difference) }
+                : item
+        ));
+    };
+
+    /**
+     * 재주문 목록에서 상품 제거 (과거 주문에는 영향 없음)
+     */
+    const removeReorderItem = (orderItemId: number) => {
+        setReorderItems((previous) => previous.filter((item) => item.orderItemId !== orderItemId));
+    };
+
+    /**
+     * 간편 재주문 상품 장바구니 담기
+     *
+     * POST /api/cart (기존 addCart API 재사용)
+     * 상품별 선택 중량(kg)을 g으로 변환하여 전달합니다.
+     */
+    const handleReorderAddToCart = async () => {
+        if (addingReorderToCart || reorderLoading || reorderItems.length === 0) return;
+
+        if (reorderItems.some((item) => item.pricePerKg == null)) {
+            window.alert("가격이 등록되지 않은 상품이 있어 장바구니에 담을 수 없습니다.");
+            return;
+        }
+
+        setAddingReorderToCart(true);
+        let completed = 0;
+
+        try {
+            // 중복 요청을 피하고 실패한 상품을 확인하기 위해 순서대로 등록
+            for (const item of reorderItems) {
+                await addCart({
+                    productId: item.productId,
+                    weightGram: item.weight * 1000,
+                    quantity: item.quantity,
+                });
+                completed += 1;
+            }
+
+            const moveToCart = window.confirm(
+                `${completed}개 상품을 장바구니에 담았습니다.\n장바구니로 이동하시겠습니까?`
+            );
+            if (moveToCart) window.location.href = "/cart";
+        } catch (err) {
+            const reason = err instanceof Error ? err.message : "장바구니 등록 중 오류가 발생했습니다.";
+            window.alert(`${completed}개 상품은 장바구니에 등록되었습니다.\n나머지 상품은 등록되지 않았을 수 있습니다.\n${reason}\n재시도 전 장바구니를 확인해 주세요.`);
+        } finally {
+            setAddingReorderToCart(false);
+        }
+    };
+
+    /**
+     * 간편 재주문 주문서로 이동
+     * 실제 주문 생성은 주문서의 최종 확정 버튼에서만 수행합니다.
+     */
+    const handleReorderCheckout = () => {
+        if (addingReorderToCart || reorderLoading || reorderItems.length === 0) return;
+        if (reorderItems.some((item) => item.pricePerKg == null)) {
+            window.alert("가격이 등록되지 않은 상품이 있어 주문서를 작성할 수 없습니다.");
+            return;
+        }
+        const payload = {
+            addressId: selectedAddressId ? Number(selectedAddressId) : null,
+            items: reorderItems.map((item) => ({
+                productId: item.productId,
+                productName: item.productName,
+                pricePerKg: item.pricePerKg,
+                weightGram: item.weight * 1000,
+                quantity: item.quantity,
+            })),
+        };
+        sessionStorage.setItem("checkoutDraft", JSON.stringify(payload));
+        window.location.href = "/order/checkout";
+    };
 
     /**
      * 회원 정보 수정 시작
@@ -1677,16 +1901,37 @@ export default function MyPage() {
                                             <p>
                                                 <strong>주문상태</strong>
                                                 {" "}
-                                                {selectedOrder.orderStatus}
+                                                {selectedOrder.orderStatusName ?? selectedOrder.orderStatus}
                                             </p>
 
                                             <p>
                                                 <strong>결제상태</strong>
                                                 {" "}
-                                                {selectedOrder.paymentStatus}
+                                                {selectedOrder.paymentStatusName ?? selectedOrder.paymentStatus}
                                             </p>
                                         </div>
                                     )}
+
+                                    {/* 주문접수 상태에서만 취소 가능 */}
+                                    {selectedOrder?.orderStatus === "PENDING" && (
+                                        <div className="mypage-order-cancel-actions">
+                                            <button
+                                                type="button"
+                                                className="mypage-order-cancel-action"
+                                                disabled={cancellingOrderId !== null}
+                                                onClick={() => void handleCancelOrder(selectedOrder)}
+                                            >
+                                                {cancellingOrderId === selectedOrder.orderId ? "취소 처리 중..." : "주문 취소"}
+                                            </button>
+                                        </div>
+                                    )}
+                                    {cancelOrderMessage && (
+                                        <p className="mypage-save-success" role="status">{cancelOrderMessage}</p>
+                                    )}
+                                    {cancelOrderError && (
+                                        <p className="mypage-save-error" role="alert">{cancelOrderError}</p>
+                                    )}
+                                    {/* 주문 상품 상세 */}
 
                                     {orderItemsLoading ? (
                                         <p>
@@ -1762,18 +2007,96 @@ export default function MyPage() {
                                 </div>
                             )}
 
-                            {/* 재주문 버튼 - 주문 생성 API 연결 전 비활성화 */}
+                            {/* 현재 판매가격 기준 재주문 상품 목록 */}
+                            {selectedOrderId && !orderItemsLoading && !orderItemsError && orderItems.length > 0 && (
+                                <div className="mypage-order-detail">
+                                    <h3>재주문 상품 선택</h3>
+                                    {reorderLoading ? (
+                                        <p>현재 상품 가격을 불러오는 중입니다...</p>
+                                    ) : reorderError ? (
+                                        <p className="mypage-save-error" role="alert">{reorderError}</p>
+                                    ) : reorderItems.length === 0 ? (
+                                        <p className="mypage-empty">재주문할 상품이 없습니다.</p>
+                                    ) : (
+                                        <>
+                                            <div className="mypage-order-table-wrap">
+                                                <table className="mypage-order-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>상품명</th>
+                                                            <th>중량</th>
+                                                            <th>수량</th>
+                                                            <th>현재 단가</th>
+                                                            <th>합계</th>
+                                                            <th>삭제</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {reorderItems.map((item) => {
+                                                            const price = item.pricePerKg == null
+                                                                ? null
+                                                                : calculateProductPrice(item.pricePerKg, item.weight * 1000);
+                                                            return (
+                                                                <tr key={item.orderItemId}>
+                                                                    <td>{item.productName}</td>
+                                                                    <td>
+                                                                        <select
+                                                                            className="mypage-input"
+                                                                            aria-label={`${item.productName} 중량`}
+                                                                            value={item.weight}
+                                                                            onChange={(e) => changeReorderWeight(item.orderItemId, Number(e.target.value))}
+                                                                        >
+                                                                            {[1, 5, 10].map((weight) => (
+                                                                                <option key={weight} value={weight}>{weight}kg</option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+                                                                            <button type="button" aria-label={`${item.productName} 수량 감소`} disabled={item.quantity <= 1} onClick={() => changeReorderQuantity(item.orderItemId, -1)}>−</button>
+                                                                            <span>{item.quantity}개</span>
+                                                                            <button type="button" aria-label={`${item.productName} 수량 증가`} onClick={() => changeReorderQuantity(item.orderItemId, 1)}>+</button>
+                                                                        </div>
+                                                                    </td>
+                                                                    <td>{price == null ? "가격 문의" : formatWon(price)}</td>
+                                                                    <td>{price == null ? "가격 문의" : formatWon(price * item.quantity)}</td>
+                                                                    <td>
+                                                                        <button type="button" aria-label={`${item.productName} 재주문에서 삭제`} onClick={() => removeReorderItem(item.orderItemId)}>삭제</button>
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div className="mypage-order-total">
+                                                <span>재주문 총금액</span>
+                                                <strong>
+                                                    {reorderItems.some((item) => item.pricePerKg == null)
+                                                        ? "가격 문의 상품 포함"
+                                                        : formatWon(reorderItems.reduce((total, item) =>
+                                                            total + calculateProductPrice(item.pricePerKg!, item.weight * 1000) * item.quantity, 0))}
+                                                </strong>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* 재주문 버튼 - 장바구니 담기 또는 주문서 작성 */}
                             <div className="mypage-reorder-actions">
                                 <button
                                     type="button"
-                                    disabled
+                                    onClick={() => void handleReorderAddToCart()}
+                                    disabled={addingReorderToCart || reorderLoading || reorderItems.length === 0 || reorderItems.some((item) => item.pricePerKg == null)}
                                 >
-                                    장바구니 담기
+                                    {addingReorderToCart ? "담는 중..." : "장바구니 담기"}
                                 </button>
 
                                 <button
                                     type="button"
-                                    disabled
+                                    onClick={handleReorderCheckout}
+                                    disabled={addingReorderToCart || reorderLoading || reorderItems.length === 0 || reorderItems.some((item) => item.pricePerKg == null)}
                                 >
                                     바로 주문
                                 </button>

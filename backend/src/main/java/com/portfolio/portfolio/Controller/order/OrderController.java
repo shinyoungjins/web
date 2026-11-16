@@ -232,4 +232,57 @@ public class OrderController {
             );
         }
     }
+    /**
+     * 로그인 회원 바로 주문 생성
+     * POST /api/orders
+     */
+    @PostMapping
+    public ResponseEntity<?> createOrder(Authentication authentication,
+                                         @RequestBody OrderService.CreateOrderRequest request) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        }
+        try {
+            Long memberId = currentMemberService.getCurrentMemberId(authentication);
+            OrderService.CreateOrderResponse result = orderService.createOrder(memberId, request);
+            return ResponseEntity.status(201).body(result);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인 회원 정보를 확인할 수 없습니다."));
+        }
+    }
+
+    /**
+     * 로그인 회원 주문 취소
+     *
+     * POST /api/orders/{orderId}/cancel
+     *
+     * - 로그인 회원의 주문만 취소
+     * - 주문접수(PENDING) 상태만 취소 가능
+     * - 주문 상태 변경 및 재고 복구는 Service에서 처리
+     */
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<?> cancelOrder(Authentication authentication, @PathVariable("orderId") Long orderId) {
+        /* 로그인 여부 확인 */
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(401).body(Map.of("message", "로그인이 필요합니다."));
+        }
+
+        try {
+            /* 현재 로그인한 회원번호 조회 */
+            Long memberId = currentMemberService.getCurrentMemberId(authentication);
+
+            /* 주문 취소 처리 */
+            orderService.cancelOrder(memberId, orderId);
+
+            return ResponseEntity.ok(Map.of("message", "주문이 취소되었습니다."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(Map.of("message", e.getMessage()));
+        }
+    }
 }

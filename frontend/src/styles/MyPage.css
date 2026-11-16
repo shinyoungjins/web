@@ -681,12 +681,43 @@
     justify-content: flex-end;
 }
 
+/* 간편 재주문 버튼 기본 스타일 */
 .mypage-reorder-actions button {
     padding: 11px 20px;
-    border: 1px solid #ccc;
+    border: 1px solid #222;
     border-radius: 6px;
-    background: #f5f5f5;
+    background: #fff;
+    color: #222;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+/* 장바구니 담기 버튼 */
+.mypage-reorder-actions button:first-child:not(:disabled) {
+    background: #fff;
+    color: #222;
+}
+
+/* 바로 주문 버튼 */
+.mypage-reorder-actions button:last-child:not(:disabled) {
+    background: #222;
+    color: #fff;
+}
+
+/* 활성화 버튼 마우스 오버 */
+.mypage-reorder-actions button:first-child:hover:not(:disabled) {
+    background: #f2f2f2;
+}
+
+.mypage-reorder-actions button:last-child:hover:not(:disabled) {
+    background: #444;
+}
+
+/* 실제 비활성화된 버튼만 회색 표시 */
+.mypage-reorder-actions button:disabled {
+    background: #eee;
     color: #999;
+    border-color: #ddd;
     cursor: not-allowed;
 }
 
@@ -941,4 +972,31 @@
     .mypage-order-total strong {
         font-size: 18px;
     }
+
+
+}
+
+/* 주문 상세 취소 버튼 */
+.mypage-order-cancel-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin: -8px 0 22px;
+}
+.mypage-order-cancel-action {
+    padding: 10px 20px;
+    border: 1px solid #b42318;
+    border-radius: 6px;
+    background: #fff;
+    color: #b42318;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.mypage-order-cancel-action:hover:not(:disabled) {
+    background: #fff3f3;
+}
+.mypage-order-cancel-action:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

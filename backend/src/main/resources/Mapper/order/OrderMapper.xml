@@ -126,20 +126,21 @@
         <result property="paymentStatus" column="payment_status"/>
         <result property="totalAmount" column="total_amount"/>
         <result property="createdAt" column="created_at"/>
-
+        <result property="orderStatusName" column="order_status_name"/>
+        <result property="paymentStatusName" column="payment_status_name"/>
     </resultMap>
 
     <!-- =====================================================
-         회원별 주문 내역 조회
+     회원별 주문 내역 조회
 
-         - 로그인 회원의 주문만 조회
-         - 배송지 선택 시 해당 배송지 주문만 조회
-         - 최신 주문순 정렬
-         - 취소 주문도 주문 이력에 포함
-         ===================================================== -->
+     - 로그인 회원의 주문만 조회
+     - 배송지 선택 시 해당 배송지 주문만 조회
+     - 최신 주문순 정렬
+     - 취소 주문도 주문 이력에 포함
+     - 주문 상태 및 결제 상태 공통코드명 조회
+     ===================================================== -->
     <select id="selectMemberOrderHistory"
             resultMap="orderHistoryResultMap">
-
         SELECT
         o.order_id,
         o.order_no,
@@ -147,23 +148,28 @@
         o.address_id,
         o.address_name,
         o.order_status,
+        COALESCE(oc.code_name, o.order_status) AS order_status_name,
         o.payment_type,
         o.payment_status,
+        COALESCE(pc.code_name, o.payment_status) AS payment_status_name,
         o.total_amount,
         o.created_at
-
         FROM shop_order o
-
+        LEFT JOIN common_code oc
+        ON oc.group_code = 'ORDER_STATUS'
+        AND oc.code = o.order_status
+        AND oc.use_yn = 'Y'
+        LEFT JOIN common_code pc
+        ON pc.group_code = 'PAYMENT_STATUS'
+        AND pc.code = o.payment_status
+        AND pc.use_yn = 'Y'
         WHERE o.member_id = #{memberId}
-
         <if test="addressId != null">
             AND o.address_id = #{addressId}
         </if>
-
         ORDER BY
         o.created_at DESC,
         o.order_id DESC
-
     </select>
 
     <!-- =====================================================
@@ -219,4 +225,150 @@
 
     </select>
 
+    <!-- 로그인 회원 소유 배송지 조회 -->
+    <select id="selectOwnedAddress" resultType="map">
+        SELECT address_name AS "addressName", recipient_name AS "recipientName",
+               recipient_phone AS "recipientPhone", zipcode,
+               address, address_detail AS "addressDetail"
+        FROM member_address
+        WHERE member_id = #{memberId} AND address_id = #{addressId}
+    </select>
+
+    <!-- 판매 중 상품의 최신 유효 단가 (같은 기준일이면 price_id가 큰 행 우선) -->
+    <select id="selectCurrentProduct" resultType="map">
+        SELECT p.product_name AS "productName", pp.price_per_kg AS "pricePerKg"
+        FROM product p
+        JOIN LATERAL (
+            SELECT price_per_kg
+            FROM product_price
+            WHERE product_id = p.product_id AND use_yn = 'Y' AND base_date &lt;= CURRENT_DATE
+            ORDER BY base_date DESC, price_id DESC
+            LIMIT 1
+        ) pp ON TRUE
+        WHERE p.product_id = #{productId} AND p.use_yn = 'Y'
+    </select>
+
+    <!-- 잔여 중량이 충분한 경우에만 차감: 동시 주문에도 음수 재고 방지 -->
+    <update id="decreaseProductStock">
+        UPDATE product_stock
+        SET remaining_weight_kg = remaining_weight_kg - #{weightKg},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE product_id = #{productId}
+          AND remaining_weight_kg >= #{weightKg}
+          AND #{weightKg} > 0
+    </update>
+
+    <!-- 주문 기본 정보 생성 및 PostgreSQL RETURNING으로 PK 조회 -->
+    <select id="insertOrder" resultType="java.lang.Long" affectData="true" flushCache="true">
+        INSERT INTO shop_order (
+            order_no, member_id, address_id, address_name, order_type,
+            payment_type, order_status, payment_status, orderer_name,
+            orderer_phone, orderer_email, total_amount, recipient_name,
+            recipient_phone, zipcode, address, address_detail, delivery_message
+        ) VALUES (
+            #{orderNo}, #{memberId}, #{addressId}, #{addressName}, 'MEMBER',
+            #{paymentType}, 'PENDING', 'UNPAID', #{ordererName},
+            #{ordererPhone}, #{ordererEmail}, #{totalAmount}, #{recipientName},
+            #{recipientPhone}, #{zipcode}, #{address}, #{addressDetail}, #{deliveryMessage}
+        ) RETURNING order_id
+    </select>
+
+    <!-- =====================================================
+     주문 상품 등록
+
+     - 상품별 주문 정보 저장
+     - 주문 당시 상품 1개당 중량(g) 저장
+     - total_amount는 DB에서 자동 계산
+     ===================================================== -->
+    <insert id="insertOrderItem">
+        INSERT INTO shop_order_item (
+        order_id,
+        product_id,
+        product_name,
+        weight_gram,
+        unit_price,
+        quantity
+        ) VALUES (
+        #{orderId},
+        #{productId},
+        #{productName},
+        #{weightGram},
+        #{unitPrice},
+        #{quantity}
+        )
+    </insert>
+
+    <!-- =====================================================
+     주문 취소 대상 조회 및 행 잠금
+
+     - 로그인 회원 본인 주문만 조회
+     - FOR UPDATE로 동일 주문의 중복 취소 방지
+     ===================================================== -->
+    <select id="selectOrderForCancel" resultType="map">
+        SELECT
+        order_id AS "orderId",
+        order_status AS "orderStatus",
+        payment_status AS "paymentStatus"
+        FROM shop_order
+        WHERE order_id = #{orderId}
+        AND member_id = #{memberId}
+        FOR UPDATE
+    </select>
+
+    <!-- =====================================================
+         주문 취소 대상 상품 조회
+
+         - 주문 당시 중량과 수량 조회
+         - 중량 정보가 없는 기존 주문은 취소 불가
+         ===================================================== -->
+    <select id="selectOrderItemsForCancel" resultType="map">
+        SELECT
+        product_id AS "productId",
+        weight_gram AS "weightGram",
+        quantity
+        FROM shop_order_item
+        WHERE order_id = #{orderId}
+        ORDER BY order_item_id ASC
+    </select>
+
+    <!-- =====================================================
+         완료된 입금 내역 확인
+
+         - 입금 완료된 주문은 자동 취소 차단
+         ===================================================== -->
+    <select id="countCompletedPayments" resultType="int">
+        SELECT COUNT(*)
+        FROM shop_payment
+        WHERE order_id = #{orderId}
+        AND payment_status = 'COMPLETED'
+    </select>
+
+    <!-- =====================================================
+         주문 상태 취소 처리
+
+         - 주문접수(PENDING) 상태만 취소 가능
+         - 본인 주문만 변경
+         ===================================================== -->
+    <update id="updateOrderCancelled">
+        UPDATE shop_order
+        SET order_status = 'CANCELLED',
+        updated_at = CURRENT_TIMESTAMP
+        WHERE order_id = #{orderId}
+        AND member_id = #{memberId}
+        AND order_status = 'PENDING'
+    </update>
+
+    <!-- =====================================================
+         주문 취소 시 상품 재고 복구
+
+         - 주문 당시 중량 × 수량 복구
+         - 상품별 잔여 중량 증가
+         ===================================================== -->
+    <update id="restoreProductStock">
+        UPDATE product_stock
+        SET remaining_weight_kg = remaining_weight_kg + #{weightKg},
+        updated_at = CURRENT_TIMESTAMP
+        WHERE product_id = #{productId}
+        AND #{weightKg} > 0
+    </update>
 </mapper>
